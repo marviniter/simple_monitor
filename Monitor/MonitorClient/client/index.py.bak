@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+#_*_coding:utf-8_*_
+
+import time
+import json
+from plugins import plugin_api
+import httplib,urllib2
+import os
+
+def requestUrl(host,port,source,params,timeout):
+	headers = {'Content-type':'application/x-www-form-urlencoded','Accept':'text/plain'}
+	try:	
+		conn = httplib.HTTPConnection(host,port,timeout)
+		conn.request('POST',source,params,headers)
+		response = conn.getresponse()
+		
+		#读取到的返回值
+		original = response.read()
+	except Exception,e:
+		raise e
+	return original
+
+def getHostName():
+	system = os.name
+	if system == 'nt':
+		hostname = os.getenv('computername')
+		return hostname
+	elif system == 'posix':
+		host = os.popen('hostname')
+		try:
+			hostname = host.read().strip('\n')
+			return hostname
+		finally:
+			host.close()
+	else:
+		return 'Unknow hostname'
+
+		
+def getConfig(hostname):
+	url = 'http://192.168.204.15:1000/api/get_config/?hostname=%s' %hostname
+	response = urllib2.urlopen(url)
+	result = json.load(response)
+	config = result['data']
+	return config
+
+def handleData(config):
+	for key,value in config.items():
+		message = {}
+		currenttime,interval,lasttime = time.time(),value['interval'],value['last_time']
+		if (currenttime-lasttime) < interval:
+			pass
+		else:
+			plugin_name = value['plugin_name']
+			func = getattr(plugin_api,plugin_name)
+			data = func()
+			#更新最新执行的时间
+			config[key]['last_time'] = currenttime
+			#发送收集的信息
+			message[key] = data
+			#message['hostid'] = hostid
+			message = json.dumps(message)
+			result = requestUrl('192.168.204.15',1000,'/api/handle_data/','ok',30)
+			print result	
+			
+if __name__ == '__main__':
+	hostname = getHostName()
+	config = getConfig(hostname)
+	#hostid = config['hostid']
+	#del config['hostid']
+	while True:
+		handleData(config)
+
+				
+'''
+#interval:取数据的间隔时间
+#plugin_name：取数据用到的插件
+#template应该从Server获取
+template = {"status":1,"message":"",
+            "data":{
+                    "cpu":{"last_time":0,"interval":5,
+                           "plgin_name":"LinuxCpu",
+                           "element":{"idle":[
+                                              {"operator":"gt","formula":'avg',"threshold":"10"},
+                                              {"operator":"lt","formula":"abs","threshold":"5"}
+                                              ]
+                                      }
+                           },
+                    "memory":{
+                              "last_time":0,"interval":8,"plgin_name":"LinuxMemory",
+                              "element":{"free":[{
+                                                  "operator":"gt","formula":"abs","threshold":"10",
+                                                  "operator":"lt",
+                                                   "formula":"abs",
+                                                   "threshold":"1",
+                                                  }]
+                                         }
+                              }
+                    }
+            }
+'''

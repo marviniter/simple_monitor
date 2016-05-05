@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>自动化运维平台</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/icon.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/demo.css">
+	<script type="text/javascript" src="/static/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.easyui.min.js"></script>
+</head>
+<body>
+<div style="margin-top:0px;margin-left:0px;margin-right:0px;margin-bottom:0px;">
+	<div class="easyui-layout"  style="width:100%;height:600px;">
+		
+		<div data-options="region:'north'" style="height:50px;background-color:#95B8E7;font-size:6">
+		    <span style="margin-left:0.5%;margin-top:3px;">  
+                <font size="26" style="line-height: 2.0em;" color="black" >  
+                    <b>运维平台</b>  
+                </font>  
+            </span>  
+              
+            <span style="float:right;margin-top:10px;margin-right:20px;">  
+                <font size="3" color="black">欢迎 : {{ username }}</font>      
+                <a> <font size="3" color="red">退出</font> </a>  
+            </span>  
+		</div>
+		
+       <div data-options="region:'south',split:true" style="height:5%;background-color:#95B8E7;">  
+            <div style="" align="center">  
+                <font size="" color="white">Copyright &copy; 2016 运维平台 All Rights Reserved 版权所有 </font>  
+            </div>  
+        </div> 
+		
+		<div data-options="region:'west',split:true" title="菜单栏" style="width:200px;">
+			<div class="easyui-accordion" data-options="fit:true,border:false">
+				<div title="主机管理"  style="padding:10px;">
+					<div><a href='/host/'>主机管理</a></div>
+					<div><a href='/host_group/'>主机组管理</a></div>
+				</div>
+				<div title="用户管理" data-options="selected:true" style="padding:10px;">
+					<div><a href='/user_group/'>平台用户管理</a></div>
+				</div>
+				<div title="日志管理"  style="padding:10px">
+					<div><a href='/audit_user/'>审计日志管理</a></div>
+				</div>
+			</div>
+		</div>
+		
+		<div data-options="region:'center',title:'详细信息',iconCls:'icon-ok'">
+            <div class="easyui-tabs" data-options="fit:true,border:false,plain:true">  
+                <div title="主机信息" style="overflow: auto; padding: 20px;"> 
+                    <table class="easyui-datagrid" data-options="method:'get',border:false,singleSelect:true,fit:true,fitColumns:true">
+                        <thead>
+                            <tr>
+                                <th data-options="field:'hostname',align:'center'" width="40">远程用户</th>
+                                <th data-options="field:'部门',align:'center'" width="40">部门</th>
+                                <th data-options="field:'创建',align:'center'" width="40">创建时间</th>
+                                <th data-options="field:'到期',align:'center'" width="40">到期时间</th>
+                                <th data-options="field:'ip',align:'center'" width="40">更改</th>
+                            </tr>
+                        </thead>
+                        
+                        <tbody>
+                            {% for item in data %}
+                            <tr>
+                                <td>{{ item.user }}</td>
+                                <td>{{ item.department }}</td>
+                                <td>{{ item.create_time }}</td>
+                                <td>{{ item.end_time }}</td>
+                                <td><a href="http://192.168.204.15:1000/admin/web_models/userprofile/{{item.id}}/" target='_Blank'>更改</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+					{% block js %}
+					{% endblock %}
+                </div>  
+            </div>  
+        </div>  
+			
+		</div>
+	
+ </div>
+</body>
+</html>
+
+
+
+

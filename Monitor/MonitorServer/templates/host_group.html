@@ -1,0 +1,26 @@
+{% extends 'master/layout.html' %}
+
+{% block content %}
+
+<table class="easyui-datagrid" data-options="method:'get',border:false,singleSelect:true,fit:true,fitColumns:true">
+	<thead>
+		<tr>
+			<th data-options="field:'hostname'" width="80">主机名</th>
+			<th data-options="field:'ip'" width="100">IP地址</th>
+			<th data-options="field:'远程'" width="100">远程</th>
+			<th data-options="field:'更多',align:'right'" width="40">图表</th>
+		</tr>
+	</thead>
+	
+	<tbody>
+		{% for item in data %}
+		<tr>
+			<td>{{ item.hostname }}</td>
+			<td>{{ item.ip_addr }}</td>
+            <td><a href="http://{{ webssh.host }}:{{ webssh.port }}?u={{ webssh.username }}&p={{ webssh.password }}" target="_blank"><span class="label label-success cursor host_login">远程管理</span></a></td>
+			<td><a href="/graphs/{{ item.id }}/">画图</a></td>
+		</tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

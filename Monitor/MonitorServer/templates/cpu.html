@@ -1,0 +1,66 @@
+{% extends 'master/layout.html' %}
+
+{% block content %}
+<div id="container" style="height: 400px; min-width: 310px"></div>
+<hr/>
+<div id="container_multi" style="min-width:400px></div>
+<div id="container_dynamic" style="min-width:400px></div>
+{% endblock %}
+
+{% block js %}
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/highstock.js"></script>
+<script src="/static/js/exporting.js"></script>
+
+<!--内存画图-->
+<script>
+$(function () {
+ // 使用当前时区，否则东八区会差八个小时
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
+
+    $.getJSON('/idle/{{hostid}}/', function (data) {
+
+        // Create the chart
+        $('#container').highcharts('StockChart', {
+        chart:{
+        events:{
+        
+            load:function(){
+            
+                var series = this.series[0]
+                setInterval(function(){
+                $.getJSON('/idle/{{hostid}}/',function(res){
+                    $.each(res,function(i,v){
+                        series.addPoint(v)
+                    })
+                })
+                },3000)
+            }
+        }
+        },
+
+            rangeSelector : {
+                selected : 1
+            },
+
+            title : {
+                text : 'CPU信息'
+            },
+			//series中有多个元素则有多条曲线
+            series : [{
+                name : 'CPU IDLE 值',
+                data : data,
+                tooltip: {
+                    valueDecimals: 2
+                }
+            }]
+        });
+    });
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,142 @@
+#coding:utf-8
+from django.db import models
+import sys
+
+# Create your models here.
+
+class Items(models.Model):
+    name = models.CharField(max_length=50,)
+    #与client中收集数据的key相同
+    key = models.CharField(max_length=100,)
+    #监控项的数据类型
+    data_type_option = (("float","Float"),('string','String'),('integer','Integer'))
+    data_type = models.CharField(max_length=50,choices=data_type_option)
+    unit = models.CharField(max_length=30,default='%')
+    #监控项是否启用，一般不用
+    enabled = models.BooleanField(default=True)
+    service = models.ForeignKey('Services')
+    
+    def __unicode__(self):
+        return self.name
+    
+class Services(models.Model):
+    monitor_type_list = (('agent','Agent'),('snmp','Snmp'),('wget','Wget'))
+    monitor_type = models.CharField(max_length=50,choices=monitor_type_list)
+    name = models.CharField(max_length=50,unique=True)
+    plugin = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return self.name
+
+class ServiceTemplate(models.Model):
+    name = models.CharField(max_length=50,unique=True)
+    
+    #key为收集数据字典的key
+    key =  models.CharField(max_length=50)
+    #执行间隔时间
+    check_interval = models.IntegerField(default=300)
+    #
+    service = models.ForeignKey('Services')
+    #阀值
+    conditions = models.ManyToManyField('Conditions',verbose_name='阀值列表')
+    description = models.TextField()
+    
+    
+    def __unicode__(self):
+        return self.name
+    
+          
+class Formulas(models.Model):
+    name = models.CharField(max_length=64,unique=True)
+    key = models.CharField(max_length=64,unique=True)
+    memo = models.TextField()
+    
+    def __unicode__(self):
+        return self.name
+
+class Operators(models.Model):
+    name = models.CharField(max_length=32,unique=True)
+    key = models.CharField(max_length=32)
+    memo = models.TextField()
+    
+    def __unicode__(self):
+        return self.name
+
+#定义阀值    
+class Conditions(models.Model):
+    name = models.CharField(max_length=100,unique=True)
+    item = models.ForeignKey('Items',verbose_name=u'监控值')
+    #
+    formula = models.ForeignKey('Formulas',verbose_name=u'运算函数')
+    #可以通过反射执行，函数名:gt 表示大于，lt 表示小于，max，min，abs
+    operator = models.ForeignKey('Operators',verbose_name=u'运算符',null=True,blank=True)
+    data_type = models.CharField(default='char',max_length=32,verbose_name=u'数据类型')
+    threshold = models.CharField(max_length=64,verbose_name=u'阀值')
+    
+    def __unicode__(self):
+        return self.name
+    
+class Idc(models.Model):
+    name = models.CharField(max_length=50,unique=True)
+    
+    def __unicode__(self):
+        return self.name
+    
+class HostGroup(models.Model):
+    name = models.CharField(max_length=50,unique=True)
+    service_template = models.ManyToManyField('ServiceTemplate')
+    
+    def __unicode__(self):
+        return self.name    
+    
+class Host(models.Model):
+    hostname = models.CharField(max_length=50,unique=True)
+    ip = models.GenericIPAddressField()
+    idc = models.ForeignKey('Idc')
+    #对批量主机生成配置模板
+    group = models.ForeignKey('HostGroup')
+    
+    def __unicode__(self):
+        return self.hostname
+
+class UserGroup(models.Model):
+    name = models.CharField(max_length=50,unique=True)
+    host_group = models.ManyToManyField('HostGroup')
+    user_info = models.ManyToManyField('UserInfo')
+    
+    def __unicode__(self):
+        return self.name
+
+class UserInfo(models.Model):
+    name = models.CharField(max_length=64)
+    email = models.EmailField()
+    tel = models.CharField(max_length=128)
+    
+    def __unicode__(self):
+        return self.name
+
+class Cpu(models.Model):
+    host = models.ForeignKey('Host')
+    user = models.CharField(max_length=64)
+    
+    nice = models.CharField(max_length=64)
+    system = models.CharField(max_length=64)
+    iowait = models.CharField(max_length=64)
+    steal = models.CharField(max_length=64)
+    idle = models.CharField(max_length=64)
+
+    def __unicode__(self):
+        return self.name
+
+class Memory(models.Model):
+    MemTotal = models.CharField(max_length=64)
+    MemUsage = models.CharField(max_length=64)
+    Cached = models.CharField(max_length=64)
+    MemFree = models.CharField(max_length=64)
+    Buffers = models.CharField(max_length=64)
+    SwapFree = models.CharField(max_length=64)
+    SwapTotal = models.CharField(max_length=64)
+    
+    def __unicode__(self):
+        return self.name
+
